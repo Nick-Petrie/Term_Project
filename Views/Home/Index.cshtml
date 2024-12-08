@@ -1,0 +1,35 @@
+﻿@{
+    ViewData["Title"] = "Index";
+}
+
+<div class="text-center p-5 mb-4 shadow" style="background-color:white;border-radius:30px;">
+    <h1 class="display-4">ReView<i class="fa fa-film" style="font-size:36px"></i></h1>
+    <p class="lead">
+        Your #1 source for movie ratings, reviews, and discussions! Join the conversation, rate your favorite films, and see what others think!
+    </p>
+</div>
+
+<div class="row p-5 mb-4 shadow" style="background-color:white;border-radius:30px;">
+    <div class="row">
+        <div class="col-md-4">
+            <h2 class="text-center">Top Rated<i class="fa fa-star" style="font-size:24px"></i></h2>
+            <p>Discover the highest-rated films by our community and critics!</p>
+        </div>
+        <div class="col-md-4">
+            <h2 class="text-center">Latest Reviews<i class="fa fa-comment" style="font-size:24px"></i></h2>
+            <p>Read and contribute reviews for the newest films in theaters and on streaming platforms!</p>
+        </div>
+        <div class="col-md-4">
+            <h2 class="text-center">Upcoming Releases<i class="fa fa-calendar" style="font-size:24px"></i></h2>
+            <p>Stay up-to-date on the latest movie releases coming soon!</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <img src="~/Images/top-rated.jpg" alt="Top Rated Movies" asp-append-version="true" class="float-sm-start img-fluid col-sm-4" />
+        <img src="~/Images/latest-reviews.jpg" alt="Latest Movie Reviews" asp-append-version="true" class="float-sm-start img-fluid col-sm-4" />
+        <img src="~/Images/upcoming-releases.jpg" alt="Upcoming Movie Releases" asp-append-version="true" class="float-sm-start img-fluid col-sm-4" />
+    </div>
+</div>
+
+
