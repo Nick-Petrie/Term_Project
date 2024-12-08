@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 namespace TermProject.Models
 {
     public enum Gender
@@ -13,12 +14,12 @@ namespace TermProject.Models
         public int ID { get; set; }
 
         [Required]
-        [StringLength(30,ErrorMessage = "Please enter your full name.")]
+        [StringLength(30,ErrorMessage = "First name is required.")]
         [Display(Name = "First Name")]
         public string FirstName { get; set; }
 
         [Required]
-        [StringLength(30, ErrorMessage = "Please enter your full name.")]
+        [StringLength(30, ErrorMessage = "Last name is required.")]
         [Display(Name = "Last Name")]
         public string LastName { get; set; }
 
@@ -36,6 +37,9 @@ namespace TermProject.Models
         public string? Zip {  get; set; }
 
         [Display(Name = "Email")]
+        [DataType(DataType.EmailAddress)]
+        [Column("Subscriber_Email")]
+
         public string? email {  get; set; }
         [Display(Name = "Phone Number")]
         public string? phoneNumber { get; set; }

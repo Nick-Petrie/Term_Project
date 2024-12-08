@@ -21,6 +21,7 @@ namespace TermProject.Models
         public int Rating { get; set; }
 
         [StringLength(500, ErrorMessage = "Review text can't exceed 500 characters.")]
+        [DataType(DataType.MultilineText)]
         [Display(Name = "Review Text")]
         public string ReviewText { get; set; }
 
