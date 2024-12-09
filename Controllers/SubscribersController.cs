@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TermProject.Models;
 
 namespace TermProject.Controllers
 {
+    [Authorize(Roles = "Administrator,Manager")] // Restrict access to Administrator and Manager roles
     public class SubscribersController : Controller
     {
         private readonly MovieReviewContext _context;
@@ -21,7 +22,7 @@ namespace TermProject.Controllers
         // GET: Subscribers
         public async Task<IActionResult> Index()
         {
-              return _context.Subscribers != null ? 
+            return _context.Subscribers != null ?
                           View(await _context.Subscribers.ToListAsync()) :
                           Problem("Entity set 'MovieReviewContext.Subscribers'  is null.");
         }
@@ -51,8 +52,6 @@ namespace TermProject.Controllers
         }
 
         // POST: Subscribers/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ID,FirstName,LastName,GenderIdentity,Address,City,State,Zip,email,phoneNumber")] Subscribers subscribers)
@@ -83,8 +82,6 @@ namespace TermProject.Controllers
         }
 
         // POST: Subscribers/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("ID,FirstName,LastName,GenderIdentity,Address,City,State,Zip,email,phoneNumber")] Subscribers subscribers)
@@ -149,14 +146,14 @@ namespace TermProject.Controllers
             {
                 _context.Subscribers.Remove(subscribers);
             }
-            
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool SubscribersExists(int id)
         {
-          return (_context.Subscribers?.Any(e => e.ID == id)).GetValueOrDefault();
+            return (_context.Subscribers?.Any(e => e.ID == id)).GetValueOrDefault();
         }
     }
 }

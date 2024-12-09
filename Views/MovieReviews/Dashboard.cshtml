@@ -1,0 +1,63 @@
+﻿@model TermProject.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+<form asp-controller="MovieReviews" asp-action="Dashboard" method="get">
+    <div class="input-group mb-3">
+        <input type="text" name="searchString" class="form-control" placeholder="Search movie reviews" value="@ViewData["CurrentFilter"]" />
+        <select name="genreFilter" class="form-select">
+            <option value="">All Genres</option>
+            @foreach (var genre in Model.Genres)
+            {
+                <option value="@genre.Name" selected="@(ViewData["CurrentGenre"]?.ToString() == genre.Name ? "selected" : null)">
+                    @genre.Name
+                </option>
+            }
+        </select>
+        <input type="hidden" name="sortOrder" value="@ViewData["CurrentSort"]" />
+        <button class="btn btn-dark" type="submit">Search</button>
+    </div>
+    <div>
+        <a class="sort-link text-dark"
+           asp-action="Dashboard"
+           asp-route-sortOrder="@ViewData["TitleSortParm"]"
+           asp-route-searchString="@ViewData["CurrentFilter"]"
+           asp-route-genreFilter="@ViewData["CurrentGenre"]">Sort by Title</a> |
+        <a class="sort-link text-dark"
+           asp-action="Dashboard"
+           asp-route-sortOrder="@ViewData["RatingSortParm"]"
+           asp-route-searchString="@ViewData["CurrentFilter"]"
+           asp-route-genreFilter="@ViewData["CurrentGenre"]">Sort by Rating</a>
+    </div>
+</form>
+
+<h2>Movie Reviews</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                <a class="table-header-link text-dark" asp-action="Dashboard" asp-route-sortOrder="@ViewData["TitleSortParm"]">Title</a>
+            </th>
+            <th>
+                <a class="table-header-link text-dark" asp-action="Dashboard" asp-route-sortOrder="@ViewData["RatingSortParm"]">Rating</a>
+            </th>
+            <th>Genre</th>
+            <th>Reviewer</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var review in Model.MovieReviews)
+        {
+            <tr>
+                <td>@review.MovieTitle</td>
+                <td>@review.Rating</td>
+                <td>@review.Genre?.Name</td>
+                <td>@review.ReviewerName</td>
+            </tr>
+        }
+    </tbody>
+</table>
+<div class="col-md-4">
+    <img src="~/images/stars.png" alt="Stars" class="img-fluid" />
+</div>
+

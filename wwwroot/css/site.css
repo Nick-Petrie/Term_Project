@@ -46,19 +46,6 @@ nav {
             color: #f4f4f9; /* Light text on hover */
         }
 
-/* Button Styling */
-button, .btn {
-    background-color: #007bff; /* Primary brand color */
-    color: #ffffff;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
-}
-
-    button:hover, .btn:hover {
-        background-color: #0056b3; /* Darker blue on hover */
-    }
 
 table {
     width: 100%;

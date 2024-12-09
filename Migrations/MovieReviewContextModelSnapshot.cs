@@ -161,7 +161,8 @@ namespace TermProject.Migrations
                         .HasColumnType("nvarchar(10)");
 
                     b.Property<string>("email")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("Subscriber_Email");
 
                     b.Property<string>("phoneNumber")
                         .HasColumnType("nvarchar(max)");

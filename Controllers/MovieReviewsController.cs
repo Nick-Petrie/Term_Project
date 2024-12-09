@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -19,11 +20,62 @@ namespace TermProject.Controllers
         }
 
         // GET: MovieReviews
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString, string genreFilter, string sortOrder, int? page)
         {
-              return _context.MovieReviews != null ? 
-                          View(await _context.MovieReviews.ToListAsync()) :
-                          Problem("Entity set 'MovieReviewContext.MovieReviews'  is null.");
+            // ViewData stores current search/filter/sort state for the view
+            ViewData["CurrentFilter"] = searchString;
+            ViewData["CurrentGenre"] = genreFilter;
+            ViewData["CurrentSort"] = sortOrder;
+            ViewData["TitleSortParm"] = String.IsNullOrEmpty(sortOrder) ? "title_desc" : "";
+            ViewData["RatingSortParm"] = sortOrder == "Rating" ? "rating_desc" : "Rating";
+
+            var movieReviews = _context.MovieReviews
+                                       .Include(m => m.Genre)
+                                       .AsQueryable();
+
+            // Apply filtering by title
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                movieReviews = movieReviews.Where(r => EF.Functions.Like(r.MovieTitle, $"%{searchString}%"));
+            }
+
+            // Apply filtering by genre
+            if (!string.IsNullOrEmpty(genreFilter))
+            {
+                movieReviews = movieReviews.Where(r => r.Genre != null && r.Genre.Name == genreFilter);
+            }
+
+            // Apply sorting
+            switch (sortOrder)
+            {
+                case "title_desc":
+                    movieReviews = movieReviews.OrderByDescending(r => r.MovieTitle);
+                    break;
+                case "Rating":
+                    movieReviews = movieReviews.OrderBy(r => r.Rating);
+                    break;
+                case "rating_desc":
+                    movieReviews = movieReviews.OrderByDescending(r => r.Rating);
+                    break;
+                default:
+                    movieReviews = movieReviews.OrderBy(r => r.MovieTitle);
+                    break;
+            }
+
+            // Pagination
+            int pageSize = 5;
+            int pageNumber = page ?? 1;
+            int totalReviews = movieReviews.Count();
+
+            ViewData["TotalPages"] = (int)Math.Ceiling((double)totalReviews / pageSize);
+            ViewData["CurrentPage"] = pageNumber;
+
+            var pagedReviews = await movieReviews
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return View(pagedReviews);
         }
 
         // GET: MovieReviews/Details/5
@@ -44,18 +96,17 @@ namespace TermProject.Controllers
             return View(movieReview);
         }
 
-        // GET: MovieReviews/Create
+        [Authorize]
         public IActionResult Create()
         {
+            ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Name");
             return View();
         }
 
-        // POST: MovieReviews/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,MovieTitle,ReviewerName,Rating,ReviewText")] MovieReview movieReview)
+        [Authorize]
+        public async Task<IActionResult> Create([Bind("Id,MovieTitle,ReviewerName,Rating,ReviewText,GenreId")] MovieReview movieReview)
         {
             if (ModelState.IsValid)
             {
@@ -63,10 +114,12 @@ namespace TermProject.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+
+            ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Name", movieReview.GenreId);
             return View(movieReview);
         }
 
-        // GET: MovieReviews/Edit/5
+        [Authorize(Roles = "Administrator,Manager")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null || _context.MovieReviews == null)
@@ -79,15 +132,15 @@ namespace TermProject.Controllers
             {
                 return NotFound();
             }
+
+            ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Name", movieReview.GenreId);
             return View(movieReview);
         }
 
-        // POST: MovieReviews/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,MovieTitle,ReviewerName,Rating,ReviewText")] MovieReview movieReview)
+        [Authorize(Roles = "Administrator,Manager")]
+        public async Task<IActionResult> Edit(int id, [Bind("Id,MovieTitle,ReviewerName,Rating,ReviewText,GenreId")] MovieReview movieReview)
         {
             if (id != movieReview.Id)
             {
@@ -114,10 +167,13 @@ namespace TermProject.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+
+            ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Name", movieReview.GenreId);
             return View(movieReview);
         }
 
-        // GET: MovieReviews/Delete/5
+        // Restrict Delete to Administrator and Manager roles
+        [Authorize(Roles = "Administrator,Manager")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null || _context.MovieReviews == null)
@@ -135,28 +191,79 @@ namespace TermProject.Controllers
             return View(movieReview);
         }
 
-        // POST: MovieReviews/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrator,Manager")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             if (_context.MovieReviews == null)
             {
-                return Problem("Entity set 'MovieReviewContext.MovieReviews'  is null.");
+                return Problem("Entity set 'MovieReviewContext.MovieReviews' is null.");
             }
             var movieReview = await _context.MovieReviews.FindAsync(id);
             if (movieReview != null)
             {
                 _context.MovieReviews.Remove(movieReview);
             }
-            
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
+        public IActionResult Dashboard(string searchString, string genreFilter, string sortOrder)
+        {
+            // Store the current filter and sorting state in ViewData
+            ViewData["CurrentFilter"] = searchString;
+            ViewData["CurrentGenre"] = genreFilter;
+            ViewData["CurrentSort"] = sortOrder;
+            ViewData["TitleSortParm"] = String.IsNullOrEmpty(sortOrder) ? "title_desc" : "";
+            ViewData["RatingSortParm"] = sortOrder == "Rating" ? "rating_desc" : "Rating";
+
+            var movieReviews = _context.MovieReviews
+                                       .Include(m => m.Genre)
+                                       .AsQueryable();
+
+            // Apply filtering by search string
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                movieReviews = movieReviews.Where(r => EF.Functions.Like(r.MovieTitle, $"%{searchString}%"));
+            }
+
+            // Apply filtering by genre
+            if (!string.IsNullOrEmpty(genreFilter))
+            {
+                movieReviews = movieReviews.Where(r => r.Genre != null && r.Genre.Name == genreFilter);
+            }
+
+            // Apply sorting
+            switch (sortOrder)
+            {
+                case "title_desc":
+                    movieReviews = movieReviews.OrderByDescending(r => r.MovieTitle);
+                    break;
+                case "Rating":
+                    movieReviews = movieReviews.OrderBy(r => r.Rating);
+                    break;
+                case "rating_desc":
+                    movieReviews = movieReviews.OrderByDescending(r => r.Rating);
+                    break;
+                default:
+                    movieReviews = movieReviews.OrderBy(r => r.MovieTitle);
+                    break;
+            }
+
+            var viewModel = new DashboardViewModel
+            {
+                MovieReviews = movieReviews.ToList(),
+                Genres = _context.Genres.ToList()
+            };
+
+            return View(viewModel);
+        }
+
         private bool MovieReviewExists(int id)
         {
-          return (_context.MovieReviews?.Any(e => e.Id == id)).GetValueOrDefault();
+            return (_context.MovieReviews?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }
